@@ -58,7 +58,7 @@ Tudo abaixo está implementado e passa nos testes automáticos. O que os testes 
 | 5 | 111 arquivos em 32 chaves, sintetizados; buses Music/SFX/UI/Ambience e bus de eco; eco do tiro atrasado pela distância à parede; impactos por superfície; vento que acompanha o vento balístico; tratamento de câmera lenta | **A mixagem nunca foi ouvida.** Os sons foram conferidos por duração, nível e espectro, não de ouvido |
 | 6 | Cinco temas em três camadas sincronizadas (ritmo, melodia, intensidade) e três vinhetas, renderizados com FluidSynth + GeneralUser GS; camadas seguem combo, estilo e a tensão do duelo | **A música nunca foi ouvida.** Notas, equilíbrio entre camadas e emendas de loop foram conferidos por medição |
 | 7 | Rua com fachadas, igreja com campanário, moinho que gira com o vento, caixa d'água, barris, cercas, cactos, mesas ao fundo, poeira, calor, tumbleweeds; pôr do sol, meio-dia e noite estrelada; Dead Eye; Long Shot | Desempenho fora desta máquina (RTX 5060) |
-| Modelos | As quatro armas refeitas com peças torneadas, coronhas arredondadas e chapas chanfradas; mãos e antebraços do jogador em todas; a mão esquerda solta a arma para carregar | As poses das mãos foram ajustadas por capturas paradas: a recarga em movimento e a mira (ADS) com as mãos não foram vistas em jogo |
+| Modelos | As quatro armas refeitas com peças torneadas, coronhas arredondadas e chapas chanfradas; mãos e antebraços do jogador em todas; a mão esquerda solta a arma para carregar | As poses das mãos foram ajustadas por capturas paradas (quadril, mira, alavanca aberta, recarga); nenhuma foi vista em movimento por uma pessoa |
 
 ## Testes
 
@@ -72,7 +72,7 @@ O script procura `Godot_v4*_console.exe` ou `godot` no PATH (ou use `$env:GODOT`
 
 Os testes rodam sem tela e sem dispositivo de áudio. Eles verificam mecânicas, pontuação, salvamento, construção dos menus, remapeamento, pausa, recursos e roteamento de áudio, estrutura e camadas da música, Dead Eye e uma bala real a 500 m. Não verificam aparência nem som.
 
-Para olhar só os modelos das armas e as mãos de quatro ângulos há `tests/model_review.tscn` (grava `output/review/models.png`; `-- 0` a `-- 3` renderiza uma arma só). `tools/run_windowed.ps1 <cena> [resolução] [argumento]` roda uma cena com janela e limite de tempo.
+Para olhar só os modelos das armas e as mãos de quatro ângulos há `tests/model_review.tscn` (grava `output/review/models.png`; `-- 0` a `-- 3` renderiza uma arma só). Para as mãos de perto há `tests/hand_review.tscn`, para a munição `tests/ammo_review.tscn`, e `tests/shot_review.tscn` captura cada arma dentro do jogo no quadril, na mira e em quatro instantes depois do tiro (para julgar a fumaça); as três estão descritas em `docs/MODELING.md`. `tools/run_windowed.ps1 <cena> [resolução] [argumento]` roda uma cena com janela e limite de tempo.
 
 Para a aparência há `tests/visual_review.tscn`, que salva capturas em `output/review/` (menu, configurações, as quatro armas, Dead Eye, noite, meio-dia, contagem, Gallery, pausa, resultados, duelo, coleção de armas):
 

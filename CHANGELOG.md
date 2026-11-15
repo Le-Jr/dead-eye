@@ -2,6 +2,26 @@
 
 O projeto foi construído em fases em 14/11/2026, antes de existir repositório. Os commits iniciais agrupam o código por funcionalidade; eles não são estados intermediários que rodavam sozinhos. Este arquivo registra a ordem real do trabalho.
 
+## Mãos refeitas e fumaça nova (15/11/2026)
+
+- **Empunhadura:** a mão direita envolvia o cabo por trás e por baixo, com o polegar solto no ar e o braço vindo do meio da tela. Agora a palma fica no lado direito, o dedo médio atrás do guarda-mato, o indicador no gatilho e o polegar dá a volta no cabo. Nas armas longas a mão abraça o delgado da coronha por baixo, com o polegar ao longo da caixa.
+- **Malha da mão:** músculo na base do polegar, membrana entre polegar e indicador e calcanhar da mão (`wrap`).
+- `_grip_hand` em `weapons/weapon_model.gd` posiciona a mão a partir do eixo do cabo; as quatro armas usam.
+- Mão de apoio com os dedos mais fechados: as pontas subiam acima do cano e apareciam ao lado da mira.
+- No rifle de alavanca a mão acompanha o laço quando a alavanca abre.
+- **Fumaça:** deixou de ser um punhado de discos brancos opacos. São três emissores: um jato rápido, uma nuvem rala que cresce, se esgarça com turbulência e vai com o vento, e um fio que continua saindo do cano. A textura é um disco roído por ruído (quatro variações); a fumaça some suavemente contra o chão, as paredes e perto do olho, e escurece à noite (`FX.smoke_tint`).
+- Cenas `tests/hand_review.tscn` e `tests/shot_review.tscn`.
+
+## Revólver e munição refinados (15/11/2026)
+
+- **Tambor:** as seis câmaras são furadas de lado a lado, com um cartucho inteiro em cada uma; entalhes de trava; fica um aro à frente do escudo, como no revólver de verdade.
+- **Cano:** alma de verdade na boca, com coroa, no lugar do disco escuro.
+- **Armação:** costas em curva contínua atrás do cão, frente arredondada sob o cano, guarda-mato em tira chata.
+- **Munição:** estojo com aro, espoleta e projétil de ponta redonda; estojo deflagrado com a boca aberta e a marca do percussor; cartucho de espingarda com culote, tubo de papel e bucha. Vale para os cartuchos soltos da recarga das quatro armas.
+- Os estojos ejetados usam a mesma malha (antes eram cilindros lisos; os da coach gun eram cilindros de latão de 6,5 cm).
+- `_plate` sombreia dobras suaves como curva; `_lathe` ganhou pontas abertas e superfície interna.
+- Cena `tests/ammo_review.tscn`; `hand_review` aceita `bare`.
+
 ## Modelos e mãos
 
 - Novo conjunto de modelagem em `weapons/weapon_model.gd`: peças torneadas, sólidos arredondados e chapas chanfradas, com normais próprias.
@@ -37,4 +57,4 @@ Controle em primeira pessoa, quatro armas com suas ações, balística com queda
 
 ## Nunca verificado por uma pessoa
 
-Som e música (só medidos), valores de sensação, limiares de estrelas, recarga em movimento com as mãos.
+Som e música (só medidos), valores de sensação, limiares de estrelas, mãos e fumaça em movimento (só capturas paradas).

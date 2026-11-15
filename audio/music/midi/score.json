@@ -1,0 +1,76 @@
+{
+  "menu": {
+    "bpm": 88,
+    "beats": 64,
+    "loop": true,
+    "stems": [
+      "menu_0.mid",
+      "menu_1.mid",
+      "menu_2.mid"
+    ]
+  },
+  "gallery": {
+    "bpm": 138,
+    "beats": 64,
+    "loop": true,
+    "stems": [
+      "gallery_0.mid",
+      "gallery_1.mid",
+      "gallery_2.mid"
+    ]
+  },
+  "quick_draw": {
+    "bpm": 60,
+    "beats": 32,
+    "loop": true,
+    "stems": [
+      "quick_draw_0.mid",
+      "quick_draw_1.mid",
+      "quick_draw_2.mid"
+    ]
+  },
+  "results": {
+    "bpm": 112,
+    "beats": 32,
+    "loop": true,
+    "stems": [
+      "results_0.mid",
+      "results_1.mid",
+      "results_2.mid"
+    ]
+  },
+  "town": {
+    "bpm": 76,
+    "beats": 64,
+    "loop": true,
+    "stems": [
+      "town_0.mid",
+      "town_1.mid",
+      "town_2.mid"
+    ]
+  },
+  "sting_record": {
+    "bpm": 132,
+    "beats": 4,
+    "loop": false,
+    "stems": [
+      "sting_record_0.mid"
+    ]
+  },
+  "sting_fail": {
+    "bpm": 96,
+    "beats": 4,
+    "loop": false,
+    "stems": [
+      "sting_fail_0.mid"
+    ]
+  },
+  "sting_ready": {
+    "bpm": 90,
+    "beats": 4,
+    "loop": false,
+    "stems": [
+      "sting_ready_0.mid"
+    ]
+  }
+}

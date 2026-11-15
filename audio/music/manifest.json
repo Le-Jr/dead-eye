@@ -1,0 +1,36 @@
+{
+  "menu": [
+    "res://audio/music/menu_0.ogg",
+    "res://audio/music/menu_1.ogg",
+    "res://audio/music/menu_2.ogg"
+  ],
+  "gallery": [
+    "res://audio/music/gallery_0.ogg",
+    "res://audio/music/gallery_1.ogg",
+    "res://audio/music/gallery_2.ogg"
+  ],
+  "quick_draw": [
+    "res://audio/music/quick_draw_0.ogg",
+    "res://audio/music/quick_draw_1.ogg",
+    "res://audio/music/quick_draw_2.ogg"
+  ],
+  "results": [
+    "res://audio/music/results_0.ogg",
+    "res://audio/music/results_1.ogg",
+    "res://audio/music/results_2.ogg"
+  ],
+  "town": [
+    "res://audio/music/town_0.ogg",
+    "res://audio/music/town_1.ogg",
+    "res://audio/music/town_2.ogg"
+  ],
+  "sting_record": [
+    "res://audio/music/sting_record_0.ogg"
+  ],
+  "sting_fail": [
+    "res://audio/music/sting_fail_0.ogg"
+  ],
+  "sting_ready": [
+    "res://audio/music/sting_ready_0.ogg"
+  ]
+}

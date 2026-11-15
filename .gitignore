@@ -1,0 +1,8 @@
+.godot/
+*.import.bak
+__pycache__/
+*.pyc
+export/
+.runtime/
+output/
+.downloads/

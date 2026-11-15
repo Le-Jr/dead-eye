@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://modes/long_shot.gd" id="1"]
+[node name="LongShot" type="Node3D"]
+script = ExtResource("1")
+challenge_id = &"long_shot"
+display_name = "Long Shot"
+time_limit = 240.0
+countdown = 3.0
+star_thresholds = Array[float]([2000.0, 5000.0, 9000.0])

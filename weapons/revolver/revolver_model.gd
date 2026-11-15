@@ -8,6 +8,10 @@ const CHAMBERS := 6
 const STEP := TAU / CHAMBERS
 const BORE_OFFSET := 0.012  # chamber centers from the cylinder axis
 const CYLINDER_RADIUS := 0.021
+const CYLINDER_HALF := 0.0212  # half its length
+const CHAMBER_RADIUS := 0.0058
+const BORE_RADIUS := 0.0057
+const AROUND := 144  # steps round the cylinder
 const HAMMER_COCKED := 0.95
 const HAMMER_HALF := 0.35
 
@@ -15,7 +19,7 @@ var _pose: Node3D  # whole gun; tilted for the reload
 var _cylinder: Node3D
 var _hammer: Node3D
 var _cartridge: MeshInstance3D
-var _rims: Array[MeshInstance3D] = []
+var _rounds: Array[MeshInstance3D] = []  # one cartridge per chamber
 var _thumb_hand: Node3D
 
 
@@ -27,9 +31,10 @@ func _init() -> void:
 	# Barrel with a crowned muzzle, ejector housing beside it, base pin below.
 	_lathe(_pose, PackedVector2Array([
 		Vector2(-0.046, 0.0094), Vector2(-0.053, 0.0094), Vector2(-0.055, 0.0088),
-		Vector2(-0.184, 0.0082), Vector2(-0.188, 0.0074),
-	]), s)
-	_muzzle_rim(_pose, Vector3(0, 0, -0.188), 0.0085)
+		Vector2(-0.184, 0.0082), Vector2(-0.1872, 0.0076), Vector2(-0.188, 0.0068),
+		Vector2(-0.188, 0.0062), Vector2(-0.1868, BORE_RADIUS),
+	]), s, Vector3.ZERO, 18, false, 0.0, 1)
+	_bore(_pose, Vector3(0, 0, -0.1868), BORE_RADIUS)
 	_lathe(_pose, PackedVector2Array([
 		Vector2(-0.05, 0.0046), Vector2(-0.143, 0.0046), Vector2(-0.148, 0.003),
 	]), s, Vector3(0.0105, -0.0125, 0), 12)
@@ -44,12 +49,17 @@ func _init() -> void:
 	]), 0.0022, s, 0.0004)
 
 	# Frame: one piece around the cylinder window, with the top strap over it.
+	# The back sweeps round behind the hammer into the grip; the front is
+	# rounded off under the barrel.
 	_plate(_pose, PackedVector2Array([
-		Vector2(-0.058, 0.0115), Vector2(-0.05, 0.0155), Vector2(-0.0455, 0.0155), Vector2(-0.0455, -0.034),
-		Vector2(0.0, -0.034), Vector2(0.0, 0.0155), Vector2(0.006, 0.0155), Vector2(0.016, 0.011),
-		Vector2(0.024, 0.003), Vector2(0.031, -0.012), Vector2(0.035, -0.03), Vector2(0.031, -0.041),
-		Vector2(0.012, -0.047), Vector2(-0.03, -0.047), Vector2(-0.058, -0.043),
-	]), 0.0172, s, 0.002)
+		Vector2(-0.058, 0.0105), Vector2(-0.0555, 0.0142), Vector2(-0.051, 0.0155), Vector2(-0.0455, 0.0155),
+		Vector2(-0.0455, -0.034), Vector2(0.0, -0.034), Vector2(0.0, 0.0155), Vector2(0.006, 0.0155),
+		Vector2(0.0115, 0.0142), Vector2(0.0165, 0.011), Vector2(0.021, 0.0066), Vector2(0.025, 0.0012),
+		Vector2(0.0285, -0.0055), Vector2(0.0315, -0.0135), Vector2(0.0335, -0.022), Vector2(0.0345, -0.03),
+		Vector2(0.034, -0.0365), Vector2(0.0315, -0.0415), Vector2(0.027, -0.045), Vector2(0.02, -0.0468),
+		Vector2(0.012, -0.047), Vector2(-0.03, -0.047), Vector2(-0.044, -0.0465), Vector2(-0.0515, -0.0445),
+		Vector2(-0.056, -0.0405), Vector2(-0.058, -0.034),
+	]), 0.0172, s, 0.0026)
 	_plate(_pose, PackedVector2Array([
 		Vector2(-0.0455, 0.0105), Vector2(0.0, 0.0105), Vector2(0.0, 0.0155), Vector2(-0.0455, 0.0155),
 	]), 0.013, s, 0.0015)
@@ -66,7 +76,12 @@ func _init() -> void:
 	_engrave(_pose, 0.0089, -0.04, -0.03, 0.022, b)
 
 	# Trigger and guard.
-	_wire(_pose, _arc(Vector2(-0.008, -0.048), Vector2(0.022, 0.021), 180, 360, 12), 0.0024, b)
+	# The guard is a flat strap, wider than it is thick.
+	var bow := _arc(Vector2(-0.008, -0.048), Vector2(0.022, 0.021), 180, 360, 16)
+	var strap := PackedVector2Array()
+	strap.resize(bow.size())
+	strap.fill(Vector2(0.0046, 0.0013))
+	_loft(_pose, bow, strap, b, 3.0, 10)
 	_plate(_pose, PackedVector2Array([
 		Vector2(-0.0105, -0.046), Vector2(-0.006, -0.046), Vector2(-0.0065, -0.057),
 		Vector2(-0.0095, -0.063), Vector2(-0.0115, -0.062), Vector2(-0.0095, -0.056),
@@ -90,7 +105,8 @@ func _init() -> void:
 	for side: float in [-1.0, 1.0]:
 		_screw(_pose, Vector3(side * 0.0148, -0.077, 0.039), b)
 
-	_cylinder = _pivot(_pose, Vector3(0, -BORE_OFFSET, -0.022))
+	# The cylinder sits a rim's thickness ahead of the recoil shield.
+	_cylinder = _pivot(_pose, Vector3(0, -BORE_OFFSET, -0.0235))
 	_build_cylinder(s)
 
 	_hammer = _pivot(_pose, Vector3(0, -0.004, 0.017))
@@ -107,50 +123,83 @@ func _init() -> void:
 	_marker(_pose, "Muzzle", Vector3(0, 0, -0.19))
 	_marker(_pose, "Eject", Vector3(0.016, -0.006, 0.01))
 
-	# Shooting hand, index finger along the guard.
-	_thumb_hand = _hand(_pose, 1.0, [[0.6, 0.95, 0.5], [1.35, 1.4, 0.8], [1.4, 1.4, 0.8], [1.45, 1.45, 0.8]],
-		Vector3(-1.15, 0.25, 0.0), 0.55, Vector3(0.5, 0.25, 0.83))
-	_place_hand(_thumb_hand, Vector3(0.009, -0.076, 0.049), Vector3(0, -0.89, 0.457), Vector3(0.6, 0, 0.8), 0.082)
+	# Shooting hand: palm on the right of the grip, middle finger tucked under
+	# the guard, index on the trigger, thumb along the left of the frame.
+	_thumb_hand = _grip_hand(_pose, Vector3(0, -0.0686, 0.0373), Vector3(0, -0.906, 0.424), 0.0, Vector2(0.0146, 0.016),
+		[[0.45, 0.75, 0.6], [0.58, 1.5, 0.82], [0.6, 1.5, 0.85], [0.66, 1.5, 0.9]],
+		Vector3(-0.52, 0.66, 0.0), -0.3, Vector3(0.2, -0.36, 0.9))
 	_add_load_hand()
 
 
-## The cylinder: six flutes milled between the chambers, chamber mouths at
-## the front, cartridge rims at the back.
+## The cylinder: six flutes milled between the chambers, which are bored
+## right through, a locking notch behind each flute, and a cartridge in every
+## chamber (rim and primer at the back, bullet nose down the hole in front).
 func _build_cylinder(material: Material) -> void:
 	var rings := 12
-	var around := 72
-	var half := 0.022
+	var half := CYLINDER_HALF
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for i in rings + 1:
 		var z := lerpf(-half, half, float(i) / rings)
-		var chamfer := 1.0 - 0.09 * smoothstep(half - 0.003, half, absf(z))
-		var flute_depth := 0.0042 * (1.0 - smoothstep(-0.001, 0.009, z))
-		for j in around:
-			var a := j * TAU / around
-			var between := cos((a - PI / 2.0 - STEP * 0.5) * CHAMBERS)
-			var cut := pow(clampf((between - 0.35) / 0.65, 0.0, 1.0), 0.8)
-			var radius := (CYLINDER_RADIUS - flute_depth * cut) * chamfer
-			st.add_vertex(Vector3(cos(a) * radius, sin(a) * radius, z))
+		for j in AROUND:
+			var a := j * TAU / AROUND
+			st.add_vertex(Vector3(cos(a), sin(a), 0) * _cylinder_radius(a, z) + Vector3(0, 0, z))
 	for i in rings:
-		for j in around:
-			var k := (j + 1) % around
-			var a := i * around + j
-			var b := i * around + k
-			var c := (i + 1) * around + k
-			var d := (i + 1) * around + j
+		for j in AROUND:
+			var k := (j + 1) % AROUND
+			var a := i * AROUND + j
+			var b := i * AROUND + k
+			var c := (i + 1) * AROUND + k
+			var d := (i + 1) * AROUND + j
 			for index: int in [a, c, b, a, d, c]:
 				st.add_index(index)
 	st.generate_normals()
 	_part(_cylinder, st.commit(), material, Vector3.ZERO)
+
+	# Both ends, with the chamber mouths left open.
+	var ends := SurfaceTool.new()
+	ends.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for z: float in [-half, half]:
-		_lathe(_cylinder, PackedVector2Array([Vector2(z, 0.0), Vector2(z, CYLINDER_RADIUS * 0.915)]) if z > 0.0
-			else PackedVector2Array([Vector2(z, CYLINDER_RADIUS * 0.915), Vector2(z, 0.0)]), material, Vector3.ZERO, 24)
+		var normal := Vector3(0, 0, signf(z))
+		for j in AROUND:
+			var spokes: Array = []
+			for a: float in [j * TAU / AROUND, (j + 1) * TAU / AROUND]:
+				# Where this spoke enters and leaves the nearest chamber.
+				var off := wrapf(a - PI / 2.0 + STEP * 0.5, 0.0, STEP) - STEP * 0.5
+				var across := BORE_OFFSET * sin(off)
+				var chord := sqrt(maxf(CHAMBER_RADIUS * CHAMBER_RADIUS - across * across, 0.0))
+				var along := BORE_OFFSET * cos(off)
+				spokes.append([Vector3(cos(a), sin(a), 0), 0.0, along - chord, along + chord, _cylinder_radius(a, z)])
+			for band: int in [1, 3]:
+				var d0: Vector3 = spokes[0][0]
+				var d1: Vector3 = spokes[1][0]
+				_quad(ends,
+					d0 * spokes[0][band] + Vector3(0, 0, z), d1 * spokes[1][band] + Vector3(0, 0, z),
+					d1 * spokes[1][band + 1] + Vector3(0, 0, z), d0 * spokes[0][band + 1] + Vector3(0, 0, z),
+					normal, normal, normal, normal)
+	_part(_cylinder, ends.commit(), material, Vector3.ZERO)
+
+	var chamber_wall := _material(&"chamber", Color(0.07, 0.075, 0.085), 0.7, 0.55)
 	for i in CHAMBERS:
 		var angle := PI / 2.0 + i * STEP
-		var at := Vector3(cos(angle), sin(angle), 0.0) * BORE_OFFSET
-		_part(_cylinder, _tube(0.0054, 0.001, 12), bore(), at + Vector3(0, 0, -half - 0.0003), true)
-		_rims.append(_part(_cylinder, _tube(0.0062, 0.002, 12), brass(), at + Vector3(0, 0, half + 0.0005), true))
+		var out := Vector3(cos(angle), sin(angle), 0.0)
+		_lathe(_cylinder, PackedVector2Array([Vector2(-half, CHAMBER_RADIUS), Vector2(half, CHAMBER_RADIUS)]),
+			chamber_wall, out * BORE_OFFSET, 14, false, 0.0, 0, true)
+		var round := _cartridge_mesh(_cylinder, 0.0056, 0.04)
+		round.position = out * BORE_OFFSET + Vector3(0, 0, half + 0.0015)
+		_rounds.append(round)
+		var notch := _part(_cylinder, _box(0.0034, 0.0012, 0.0056), bore(), out * (CYLINDER_RADIUS - 0.0004) + Vector3(0, 0, half - 0.0085))
+		notch.rotation.z = angle - PI / 2.0
+
+
+## The cylinder's outline: its radius at angle `a`, `z` along its length.
+## Flutes run from the front to past the middle; both ends are chamfered.
+func _cylinder_radius(a: float, z: float) -> float:
+	var chamfer := 1.0 - 0.09 * smoothstep(CYLINDER_HALF - 0.003, CYLINDER_HALF, absf(z))
+	var flute_depth := 0.0042 * (1.0 - smoothstep(-0.001, 0.009, z))
+	var between := cos((a - PI / 2.0 - STEP * 0.5) * CHAMBERS)
+	var cut := pow(clampf((between - 0.35) / 0.65, 0.0, 1.0), 0.8)
+	return (CYLINDER_RADIUS - flute_depth * cut) * chamfer
 
 
 func _play_procedural(action: StringName, duration: float, args: Dictionary) -> void:
@@ -162,11 +211,9 @@ func _play_procedural(action: StringName, duration: float, args: Dictionary) -> 
 			_tween_to(_hammer, "rotation:x", 0.0, duration)
 		&"chambers":
 			var states: Array = args.get("states", [])
-			for i in mini(states.size(), _rims.size()):
-				_rims[i].visible = states[i] != Revolver.Chamber.EMPTY
-				_rims[i].material_override = (
-					spent_brass() if states[i] == Revolver.Chamber.SPENT else null
-				)
+			for i in mini(states.size(), _rounds.size()):
+				_rounds[i].visible = states[i] != Revolver.Chamber.EMPTY
+				set_cartridge_spent(_rounds[i], states[i] == Revolver.Chamber.SPENT)
 		&"reload_open":
 			_tween_to(_hammer, "rotation:x", HAMMER_HALF, duration)
 			_tween_to(_pose, "rotation", Vector3(0.55, 0.5, -0.6), duration)

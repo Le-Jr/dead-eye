@@ -121,13 +121,15 @@ func _init() -> void:
 	_marker(_pose, "Eject", Vector3(0, 0.02, 0.02))
 
 	# Right hand on the wrist with three fingers through the loop; left under the fore-end.
-	_grip = _pivot(_pose, Vector3(0.03, -0.01, 0.17))
-	var right := _hand(_grip, 1.0, [[0.45, 0.75, 0.4], [1.15, 1.3, 0.7], [1.2, 1.3, 0.7], [1.25, 1.35, 0.7]],
-		Vector3(-1.2, 0.2, 0.0), 0.6, Vector3(0.45, 0.3, 0.84))
-	_place_hand(right, Vector3(0.011, -0.03, 0.122) - _grip.position, Vector3(0, -0.95, 0.3), Vector3(0.6, 0, 0.8), 0.082)
-	_support_hand = _hand(_pose, -1.0, [[1.0, 0.9, 0.5], [1.05, 0.95, 0.5], [1.05, 0.95, 0.5], [1.0, 0.9, 0.5]],
+	# The hand hangs from a pivot down by the elbow, so that swinging it keeps
+	# the fingers inside the loop as the lever drops.
+	_grip = _pivot(_pose, Vector3(0.15, -0.23, 0.23))
+	_grip_hand(_grip, Vector3(0, -0.023, 0.105) - _grip.position, Vector3(0, -0.57, 0.82), 1.6, Vector2(0.018, 0.019),
+		[[0.35, 1.0, 0.9], [0.58, 1.45, 0.95], [0.6, 1.45, 0.97], [0.66, 1.45, 1.0]],
+		Vector3(0.37, 1.05, 0.0), 0.15, Vector3(0.3, -0.55, 0.78), 0.012)
+	_support_hand = _hand(_pose, -1.0, [[1.15, 1.3, 0.9], [1.2, 1.35, 0.9], [1.2, 1.35, 0.9], [1.15, 1.3, 0.9]],
 		Vector3(-0.9, -0.5, 0.0), 0.4, Vector3(-0.74, 0.31, 0.56))
-	_place_hand(_support_hand, Vector3(0, -0.04, -0.19), Vector3(0, 0, -1), Vector3(0.3, -0.9, 0))
+	_place_hand(_support_hand, Vector3(0, -0.04, -0.19), Vector3(0, 0, -1), Vector3(0.3, -0.9, 0), 0.066)
 	_support_home = _support_hand.position
 	_add_load_hand()
 
@@ -138,7 +140,7 @@ func _play_procedural(action: StringName, duration: float, _args: Dictionary) ->
 			# The bolt runs back over the hammer and cocks it; the muzzle dips
 			# as the off hand takes the weight.
 			_tween_to(_lever, "rotation:x", LEVER_OPEN, duration)
-			_tween_to(_grip, "rotation:x", -0.5, duration)
+			_tween_to(_grip, "rotation:x", -0.46, duration)
 			_tween_to(_hammer, "rotation:x", HAMMER_COCKED, duration)
 			_tween_to(_pose, "rotation", Vector3(-0.07, 0.0, 0.12), duration)
 		&"lever_close":

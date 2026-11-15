@@ -111,12 +111,12 @@ func _init() -> void:
 	_marker(_pose, "Eject", Vector3(0, 0.0, 0.03))
 
 	# Right hand on the grip, left hand under the fore-end (it rides the barrels).
-	var right := _hand(_pose, 1.0, [[0.35, 0.65, 0.35], [1.15, 1.3, 0.7], [1.2, 1.3, 0.7], [1.25, 1.35, 0.7]],
-		Vector3(-1.15, 0.25, 0.0), 0.55, Vector3(0.5, 0.25, 0.83))
-	_place_hand(right, Vector3(0.012, -0.068, 0.244), Vector3(0, -0.86, 0.5), Vector3(0.6, 0, 0.8), 0.082)
-	_support_hand = _hand(furniture, -1.0, [[1.0, 0.9, 0.5], [1.05, 0.95, 0.5], [1.05, 0.95, 0.5], [1.0, 0.9, 0.5]],
+	_grip_hand(_pose, Vector3(0, -0.022, 0.155), Vector3(0, -0.5, 0.87), 1.6, Vector2(0.02, 0.0206),
+		[[0.35, 1.0, 0.9], [0.58, 1.45, 0.95], [0.6, 1.45, 0.97], [0.66, 1.45, 1.0]],
+		Vector3(-0.1, 1.2, 0.0), 0.15, Vector3(0.3, -0.55, 0.78), 0.012)
+	_support_hand = _hand(furniture, -1.0, [[1.15, 1.3, 0.9], [1.2, 1.35, 0.9], [1.2, 1.35, 0.9], [1.15, 1.3, 0.9]],
 		Vector3(-0.9, -0.5, 0.0), 0.4, Vector3(-0.74, 0.31, 0.56))
-	_place_hand(_support_hand, Vector3(0, -0.04, -0.17), Vector3(0, 0, -1), Vector3(0.3, -0.9, 0))
+	_place_hand(_support_hand, Vector3(0, -0.04, -0.17), Vector3(0, 0, -1), Vector3(0.3, -0.9, 0), 0.066)
 	_support_home = _support_hand.position
 	_add_load_hand()
 

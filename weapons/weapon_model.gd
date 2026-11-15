@@ -17,9 +17,11 @@ extends Node3D
 signal action_played(action: StringName)
 
 static var _materials := {}
+static var _case_meshes := {}
 
 var _muzzle: Node3D
 var _eject: Node3D
+var _hands: Array[Node3D] = []
 var _tweens := {}
 
 
@@ -50,6 +52,12 @@ func play_action(action: StringName, duration := 0.0, args := {}) -> void:
 
 func _play_procedural(_action: StringName, _duration: float, _args: Dictionary) -> void:
 	pass
+
+
+## Hides or shows the player's hands and arms, to look at the gun alone.
+func set_hands_visible(shown: bool) -> void:
+	for hand in _hands:
+		hand.visible = shown
 
 
 # --- Shared materials -----------------------------------------------------
@@ -174,17 +182,29 @@ static func _noise_texture(noise_seed: int, frequency: float, colors: Array) -> 
 ## the facets visible (8 segments + flat = an octagonal barrel).
 func _lathe(
 	parent: Node3D, profile: PackedVector2Array, material: Material, at := Vector3.ZERO,
-	segments := 18, flat := false, phase := 0.0
+	segments := 18, flat := false, phase := 0.0, caps := 3, inside := false
 ) -> MeshInstance3D:
+	return _part(parent, lathe_mesh(profile, segments, flat, phase, caps, inside), material, at)
+
+
+## The mesh behind _lathe. `caps` closes the ends (1 = the first point, 2 = the
+## last, 3 = both, 0 = an open tube). `inside` turns the surface to face the
+## axis, for bores and chambers. `onto` adds the result to an existing mesh as
+## one more surface.
+static func lathe_mesh(
+	profile: PackedVector2Array, segments := 18, flat := false, phase := 0.0, caps := 3,
+	inside := false, onto: ArrayMesh = null
+) -> ArrayMesh:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var facing := -1.0 if inside else 1.0
 	var forward := signf(profile[profile.size() - 1].x - profile[0].x)
 	if forward == 0.0:
 		forward = 1.0
 	for i in profile.size() - 1:
 		var p := profile[i]
 		var q := profile[i + 1]
-		var slope := Vector2(-(q.y - p.y), q.x - p.x) * forward  # (along z, outward)
+		var slope := Vector2(-(q.y - p.y), q.x - p.x) * forward * facing  # (along z, outward)
 		if slope.length() < 0.000001:
 			continue
 		slope = slope.normalized()
@@ -204,15 +224,15 @@ func _lathe(
 				n0, n1, n1, n0)
 	for end: int in [0, profile.size() - 1]:
 		var p := profile[end]
-		if p.y <= 0.0:
+		if p.y <= 0.0 or caps & (1 if end == 0 else 2) == 0:
 			continue
-		var normal := Vector3(0, 0, -forward if end == 0 else forward)
+		var normal := Vector3(0, 0, -forward if end == 0 else forward) * facing
 		for s in segments:
 			var a0 := phase + s * TAU / segments
 			var a1 := phase + (s + 1) * TAU / segments
 			_tri(st, Vector3(0, 0, p.x), Vector3(cos(a0), sin(a0), 0) * p.y + Vector3(0, 0, p.x),
 				Vector3(cos(a1), sin(a1), 0) * p.y + Vector3(0, 0, p.x), normal, normal, normal)
-	return _part(parent, st.commit(), material, at)
+	return st.commit(onto)
 
 
 ## A rounded solid swept along `path`: at each point the cross-section is a
@@ -288,17 +308,24 @@ func _plate(
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for i in count:
 		var j := (i + 1) % count
-		var n := Vector3(0, edge_normals[i].y, edge_normals[i].x)
+		# Shade round a gentle bend in the outline; keep a real corner crisp.
+		var before := edge_normals[(i - 1 + count) % count]
+		var after := edge_normals[j]
+		var start := (edge_normals[i] + before).normalized() if edge_normals[i].dot(before) > 0.75 else edge_normals[i]
+		var finish := (edge_normals[i] + after).normalized() if edge_normals[i].dot(after) > 0.75 else edge_normals[i]
+		var na := Vector3(0, start.y, start.x)
+		var nb := Vector3(0, finish.y, finish.x)
 		var a := Vector3(0, outline[i].y, outline[i].x)
 		var b := Vector3(0, outline[j].y, outline[j].x)
 		var wall := Vector3(half - bevel, 0, 0)
-		_quad(st, a - wall + Vector3(x, 0, 0), b - wall + Vector3(x, 0, 0), b + wall + Vector3(x, 0, 0), a + wall + Vector3(x, 0, 0), n, n, n, n)
+		_quad(st, a - wall + Vector3(x, 0, 0), b - wall + Vector3(x, 0, 0), b + wall + Vector3(x, 0, 0), a + wall + Vector3(x, 0, 0), na, nb, nb, na)
 		for side: float in [-1.0, 1.0]:
-			var slant := (n + Vector3(side, 0, 0)).normalized()
+			var sa := (na + Vector3(side, 0, 0)).normalized()
+			var sb := (nb + Vector3(side, 0, 0)).normalized()
 			_quad(st,
 				a + Vector3(x + side * (half - bevel), 0, 0), b + Vector3(x + side * (half - bevel), 0, 0),
 				Vector3(x + side * half, inset[j].y, inset[j].x), Vector3(x + side * half, inset[i].y, inset[i].x),
-				slant, slant, slant, slant)
+				sa, sb, sb, sa)
 	var triangles := Geometry2D.triangulate_polygon(inset)
 	for side: float in [-1.0, 1.0]:
 		var n := Vector3(side, 0, 0)
@@ -380,23 +407,91 @@ func _muzzle_rim(parent: Node3D, at: Vector3, radius: float) -> void:
 	_part(parent, _tube(radius * 0.62, 0.001, 14), bore(), at + Vector3(0, 0, -0.0006), true)
 
 
-## A cartridge lying along the bore, bullet toward -Z, base at the origin.
+## A real hole down a barrel: dark walls and a floor `depth` behind the
+## muzzle face at `at`. The barrel's own profile has to stop at the same
+## radius with its last end left open (caps = 1).
+func _bore(parent: Node3D, at: Vector3, radius: float, depth := 0.03) -> void:
+	_lathe(parent, PackedVector2Array([Vector2(0, radius), Vector2(depth, radius)]), bore(), at, 14, false, 0.0, 2, true)
+
+
+# --- Ammunition ------------------------------------------------------------------
+
+## A cartridge lying along the bore, bullet toward -Z, base at the origin:
+## rimmed brass case, primer in its pocket, round-nosed lead bullet. With
+## `shell` it is a shotgun shell instead (brass head, paper hull, card wad).
+## Use set_cartridge_spent() to turn it into a fired case.
 func _cartridge_mesh(parent: Node3D, radius: float, length: float, shell := false) -> MeshInstance3D:
-	var case_length := length * (0.86 if shell else 0.66)
-	var holder := _lathe(parent, PackedVector2Array([
-		Vector2(0, radius * 1.12), Vector2(-0.0012, radius * 1.12), Vector2(-0.0012, radius),
-		Vector2(-case_length, radius),
-	]), brass(), Vector3.ZERO, 10)
-	if shell:
-		_lathe(holder, PackedVector2Array([
-			Vector2(-0.016, radius * 1.01), Vector2(-length + 0.003, radius * 1.01), Vector2(-length, radius * 0.8),
-		]), _material(&"shell", Color(0.5, 0.1, 0.07), 0.0, 0.6), Vector3.ZERO, 10)
-	else:
-		_lathe(holder, PackedVector2Array([
-			Vector2(-case_length, radius * 0.94), Vector2(-length + radius * 0.9, radius * 0.8),
-			Vector2(-length + radius * 0.25, radius * 0.45), Vector2(-length, 0.0),
-		]), lead(), Vector3.ZERO, 10)
+	var case_length := length if shell else length * 0.66
+	var holder := _part(parent, case_mesh(radius, case_length, shell), brass(), Vector3.ZERO)
+	# Primer: a dark ring where the pocket is, the cup itself, and the dent
+	# the firing pin leaves (hidden until the round is spent).
+	var cup := 0.3 if shell else 0.36
+	_lathe(holder, PackedVector2Array([Vector2(0.00005, radius * (cup + 0.07)), Vector2(-0.0004, radius * (cup + 0.07))]), bore(), Vector3.ZERO, 12, false, 0.0, 1)
+	_lathe(holder, PackedVector2Array([Vector2(0.00012, radius * cup), Vector2(-0.0004, radius * cup)]),
+		_material(&"primer", Color(0.8, 0.72, 0.52), 0.9, 0.28), Vector3.ZERO, 12, false, 0.0, 1)
+	var dent := _lathe(holder, PackedVector2Array([Vector2(0.0002, radius * 0.12), Vector2(-0.0004, radius * 0.12)]), bore(), Vector3.ZERO, 8, false, 0.0, 1)
+	dent.name = "Dent"
+	dent.visible = false
+	if not shell:
+		var nose := length - case_length - 0.0015
+		var bullet := _lathe(holder, PackedVector2Array([
+			Vector2(-case_length + 0.001, radius * 0.93), Vector2(-case_length - 0.0015, radius * 0.93),
+			Vector2(-length + nose * 0.6, radius * 0.86), Vector2(-length + nose * 0.3, radius * 0.68),
+			Vector2(-length + nose * 0.09, radius * 0.47), Vector2(-length, radius * 0.36),
+		]), lead(), Vector3.ZERO, 14, false, 0.0, 2)
+		bullet.name = "Bullet"
 	return holder
+
+
+## Shows a cartridge made by _cartridge_mesh as live, or as a fired case:
+## sooty brass, the bullet gone, the primer struck.
+static func set_cartridge_spent(cartridge: MeshInstance3D, spent: bool) -> void:
+	cartridge.set_surface_override_material(0, spent_brass() if spent else brass())
+	var bullet := cartridge.get_node_or_null("Bullet") as Node3D
+	if bullet:
+		bullet.visible = not spent
+	var dent := cartridge.get_node_or_null("Dent") as Node3D
+	if dent:
+		dent.visible = spent
+
+
+## An empty case (or shotgun shell) `length` long, base at the origin, mouth
+## toward -Z. Surface 0 is the brass; the rest carry their own materials.
+## Shared and cached: the guns use it and so do the cases they throw out.
+static func case_mesh(radius: float, length: float, shell := false, spent := false) -> ArrayMesh:
+	var key := "%.4f:%.4f:%s:%s" % [radius, length, shell, spent]
+	if _case_meshes.has(key):
+		return _case_meshes[key]
+	var mesh: ArrayMesh
+	var metal := spent_brass() if spent else brass()
+	if shell:
+		mesh = lathe_mesh(PackedVector2Array([
+			Vector2(0, radius * 0.95), Vector2(-0.0004, radius * 1.1), Vector2(-0.0016, radius * 1.1),
+			Vector2(-0.002, radius), Vector2(-0.016, radius), Vector2(-0.0165, radius * 0.985),
+		]), 16, false, 0.0, 1)
+		mesh.surface_set_material(0, metal)
+		lathe_mesh(PackedVector2Array([
+			Vector2(-0.0165, radius * 0.985), Vector2(-length + 0.003, radius * 0.985),
+			Vector2(-length + 0.0008, radius * 0.95), Vector2(-length, radius * 0.88),
+		]), 16, false, 0.0, 0, false, mesh)
+		mesh.surface_set_material(1, _material(&"shell", Color(0.5, 0.1, 0.07), 0.0, 0.6))
+		# The mouth: a card wad on a live shell, a burnt hole on a fired one.
+		lathe_mesh(PackedVector2Array([
+			Vector2(-length, radius * 0.88), Vector2(-length + (0.02 if spent else 0.0025), radius * 0.88),
+		]), 16, false, 0.0, 2, true, mesh)
+		mesh.surface_set_material(2, bore() if spent else _material(&"wad", Color(0.72, 0.62, 0.45), 0.0, 0.85))
+	else:
+		mesh = lathe_mesh(PackedVector2Array([
+			Vector2(0, radius * 0.95), Vector2(-0.0003, radius * 1.13), Vector2(-0.0013, radius * 1.13),
+			Vector2(-0.0017, radius), Vector2(-length + 0.0006, radius), Vector2(-length, radius * 0.965),
+		]), 14, false, 0.0, 1)
+		mesh.surface_set_material(0, metal)
+		lathe_mesh(PackedVector2Array([
+			Vector2(-length, radius * 0.9), Vector2(-length + minf(0.012, length * 0.5), radius * 0.9),
+		]), 14, false, 0.0, 2, true, mesh)
+		mesh.surface_set_material(1, bore())
+	_case_meshes[key] = mesh
+	return mesh
 
 
 # --- Hands -------------------------------------------------------------------
@@ -405,7 +500,11 @@ const FINGER_X := [-0.031, -0.0105, 0.0105, 0.0295]
 const FINGER_LENGTHS := [[0.042, 0.026, 0.022], [0.046, 0.029, 0.023], [0.043, 0.027, 0.022], [0.034, 0.021, 0.019]]
 const FINGER_RADII := [0.0096, 0.01, 0.0095, 0.0084]
 const PALM_HALF_THICKNESS := 0.0125
+const KNUCKLE_Z := -0.094
 const HAND_SCALE := 0.93
+## How far a gripping hand is turned in behind the grip, so the forearm ends
+## up behind the gun rather than beside it.
+const GRIP_TILT := 0.35
 
 ## A hand closed around something, on a forearm in a coat sleeve.
 ##
@@ -414,8 +513,15 @@ const HAND_SCALE := 0.93
 ## index to the little finger. `side` is 1 for a right hand, -1 for a left.
 ## `curls` is one [knuckle, middle, tip] triple of radians per finger, index
 ## first. `arm` is the direction the forearm leaves the wrist, in hand space.
-func _hand(parent: Node3D, side: float, curls: Array, thumb: Vector3, thumb_curl: float, arm: Vector3) -> Node3D:
+## `wrap` is how far (metres) the base of the thumb closes across the palm:
+## 0 for a hand lying on something, about 0.028 for a fist round a pistol
+## grip, where the heel of the hand fills in behind whatever is held.
+func _hand(
+	parent: Node3D, side: float, curls: Array, thumb: Vector3, thumb_curl: float, arm: Vector3,
+	wrap := 0.0
+) -> Node3D:
 	var hand := _pivot(parent, Vector3.ZERO)
+	_hands.append(hand)
 	var flesh := skin()
 	_loft(hand, PackedVector3Array([
 		Vector3(0, 0, 0.006), Vector3(0, 0, -0.03), Vector3(0, 0, -0.072), Vector3(0, 0, -0.098),
@@ -423,22 +529,40 @@ func _hand(parent: Node3D, side: float, curls: Array, thumb: Vector3, thumb_curl
 		Vector2(0.029, 0.0155), Vector2(0.04, 0.0145), Vector2(0.0425, PALM_HALF_THICKNESS), Vector2(0.041, 0.0105),
 	]), flesh, 3.2, 14)
 	for f in 4:
-		var joint := _pivot(hand, Vector3(side * FINGER_X[f], -0.0005, -0.094))
+		var joint := _pivot(hand, Vector3(side * FINGER_X[f], -0.0005, KNUCKLE_Z))
 		for s in 3:
 			joint.rotation.x = -curls[f][s]
 			var length: float = FINGER_LENGTHS[f][s]
 			var radius: float = FINGER_RADII[f] * (1.0 - 0.07 * s)
 			_part(joint, _capsule(radius, length + radius * 1.5, 8), flesh, Vector3(0, 0, -length * 0.5), true)
 			joint = _pivot(joint, Vector3(0, 0, -length))
-	# Thumb: the mound at its base, then two joints.
-	var mound := _part(hand, _ball(0.02), flesh, Vector3(-side * 0.027, -0.006, -0.03))
-	mound.scale = Vector3(0.9, 0.75, 1.5)
-	var base := _pivot(hand, Vector3(-side * 0.036, -0.004, -0.04))
+	# Thumb: two joints on the muscle at its base, and the web of skin that
+	# joins it to the index knuckle (what sits against the back of a grip).
+	var base := _pivot(hand, Vector3(-side * 0.036, -0.004 - wrap, -0.04 - wrap))
 	base.rotation = Vector3(thumb.x, thumb.y * side, thumb.z * side)
 	_part(base, _capsule(0.0118, 0.04 + 0.016, 8), flesh, Vector3(0, 0, -0.02), true)
 	var tip := _pivot(base, Vector3(0, 0, -0.04))
 	tip.rotation.x = -thumb_curl
 	_part(tip, _capsule(0.0105, 0.03 + 0.014, 8), flesh, Vector3(0, 0, -0.015), true)
+	var thumb_joint: Vector3 = base.transform * Vector3(0, 0, -0.024)
+	_loft(hand, PackedVector3Array([
+		Vector3(-side * 0.014, -0.005 - wrap * 0.3, 0.0),
+		Vector3(-side * 0.03, -0.006 - wrap * 0.75, -0.03 - wrap * 0.5), thumb_joint,
+	]), PackedVector2Array([Vector2(0.017, 0.0135), Vector2(0.0165, 0.014), Vector2(0.0125, 0.012)]), flesh, 2.2, 12)
+	var index_knuckle := Vector3(side * FINGER_X[0], -0.002, KNUCKLE_Z + 0.008)
+	_loft(hand, PackedVector3Array([
+		thumb_joint, thumb_joint.lerp(index_knuckle, 0.5) + Vector3(0, 0, 0.012), index_knuckle,
+	]), PackedVector2Array([Vector2(0.0115, 0.0105), Vector2(0.012, 0.0095), Vector2(0.0105, 0.0095)]), flesh, 2.0, 10)
+	if wrap > 0.0:
+		# Heel of the hand, thick under the thumb and thinning to the edge.
+		_loft(hand, PackedVector3Array([
+			Vector3(-side * 0.044, -0.006 - wrap * 0.55, -0.05), Vector3(-side * 0.036, -0.006 - wrap * 0.55, -0.05),
+			Vector3(0, -0.006 - wrap * 0.35, -0.047),
+			Vector3(side * 0.035, -0.008 - wrap * 0.12, -0.042), Vector3(side * 0.042, -0.008 - wrap * 0.12, -0.042),
+		]), PackedVector2Array([
+			Vector2(0.016, 0.004 + wrap * 0.3), Vector2(0.03, 0.006 + wrap * 0.6), Vector2(0.03, 0.006 + wrap * 0.45),
+			Vector2(0.024, 0.005 + wrap * 0.25), Vector2(0.013, 0.004 + wrap * 0.1),
+		]), flesh, 2.0, 12)
 
 	var d := arm.normalized()
 	_part(hand, _ball(0.024), flesh, d * 0.004).scale = Vector3(1.15, 0.75, 1.0)
@@ -461,11 +585,52 @@ func _hand(parent: Node3D, side: float, curls: Array, thumb: Vector3, thumb_curl
 ## `along` is how far from the wrist the contact is: 0.055 is mid-palm, more
 ## moves it toward the knuckles for a tight wrap around a thin grip.
 func _place_hand(hand: Node3D, palm_point: Vector3, across: Vector3, back: Vector3, along := 0.055) -> void:
+	var basis := _hand_basis(across, back)
+	hand.transform = Transform3D(basis, palm_point + basis * Vector3(0, PALM_HALF_THICKNESS, along))
+
+
+## Puts a hand by its knuckles, for a grip the fingers wrap right around:
+## `knuckles` is where the middle of the knuckle line goes, beside the grip.
+## From there the fingers leave at right angles to `across` and `back`, and
+## the palm runs the other way to the wrist.
+func _place_knuckles(hand: Node3D, knuckles: Vector3, across: Vector3, back: Vector3) -> void:
+	var basis := _hand_basis(across, back)
+	hand.transform = Transform3D(basis, knuckles - basis * Vector3(0, 0, KNUCKLE_Z))
+
+
+## A right hand closed round a grip, thumb wrapped over to the far side.
+## `center` is the point on the grip's axis that the middle of the palm
+## covers and `down` runs along the grip toward the little finger. `roll`
+## turns the hand about the grip: at 0 the palm lies flat on the right side
+## with the wrist behind it (a pistol); more brings the palm underneath and
+## the wrist out to the right (the wrist of a rifle stock). `size` is the
+## grip's half-width and half-depth where the fingers meet it. `fingers` and
+## the thumb angles and `wrap` are as for _hand; `arm` is in the parent's
+## space.
+func _grip_hand(
+	parent: Node3D, center: Vector3, down: Vector3, roll: float, size: Vector2,
+	fingers: Array, thumb: Vector3, thumb_curl: float, arm: Vector3, wrap := 0.0275
+) -> Node3D:
+	var x := down.normalized()
+	var front := Vector3.RIGHT.cross(x).normalized()  # the side the fingers cross
+	var palm := Vector3.RIGHT * cos(roll) + front * sin(roll)  # the side the palm lies on
+	front = front * cos(roll) - Vector3.RIGHT * sin(roll)
+	var back := palm * cos(GRIP_TILT) - front * sin(GRIP_TILT)
+	var hand := _hand(parent, 1.0, fingers, thumb, thumb_curl, _hand_basis(x, back).inverse() * arm, wrap)
+	# The knuckles sit behind the middle of the grip so that the first finger
+	# joint lands on its front corner.
+	var finger_radius: float = FINGER_RADII[1] * HAND_SCALE
+	var knuckles := center + palm * (size.x + finger_radius) - front * (0.039 - size.y - finger_radius)
+	_place_knuckles(hand, knuckles, x, back)
+	return hand
+
+
+## The hand's axes in its parent's space; see _place_hand for the arguments.
+## Use its inverse to turn a parent-space direction into an `arm` for _hand.
+static func _hand_basis(across: Vector3, back: Vector3) -> Basis:
 	var x := across.normalized()
 	var y := (back - x * back.dot(x)).normalized()
-	var z := x.cross(y)
-	var basis := Basis(x, y, z).scaled(Vector3.ONE * HAND_SCALE)
-	hand.transform = Transform3D(basis, palm_point + (y * PALM_HALF_THICKNESS + z * along) * HAND_SCALE)
+	return Basis(x, y, x.cross(y)).scaled(Vector3.ONE * HAND_SCALE)
 
 # --- Construction helpers -------------------------------------------------
 

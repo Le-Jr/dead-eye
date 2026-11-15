@@ -246,6 +246,7 @@ func _shoot(spread_deg: float, recoil_scale := 1.0) -> void:
 	var muzzle := model.get_muzzle()
 	FX.muzzle_flash(muzzle, sqrt(data.smoke_amount))
 	FX.smoke_puff(self, muzzle.global_position, -muzzle.global_basis.z, data.smoke_amount)
+	FX.barrel_wisp(muzzle, data.smoke_amount)
 
 	var kick := Vector2(data.recoil_kick.x, randf_range(-1.0, 1.0) * data.recoil_kick.y)
 	player.apply_recoil(kick * recoil_scale, data.recoil_duration, data.recoil_curve)

@@ -382,6 +382,7 @@ func set_time_of_day(preset: String) -> void:
 	sky_material.sky_cover_modulate = Color(0.8, 0.85, 1.0) if preset == "night" else Color.BLACK
 	sky_material.sky_energy_multiplier = 0.6 if preset == "night" else 1.0
 	atmosphere.fog_light_color = Color("242e43") if preset == "night" else Color("cfa87b")
+	FX.smoke_tint = Color(0.3, 0.34, 0.46) if preset == "night" else Color.WHITE if preset == "noon" else Color(1.0, 0.93, 0.84)
 	for light in lanterns:
 		light.visible = preset == "night"
 

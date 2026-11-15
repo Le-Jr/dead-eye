@@ -1,0 +1,177 @@
+{
+  "shot_revolver": [
+    "res://audio/sfx/shot_revolver_0.wav",
+    "res://audio/sfx/shot_revolver_1.wav",
+    "res://audio/sfx/shot_revolver_2.wav",
+    "res://audio/sfx/shot_revolver_3.wav"
+  ],
+  "shot_lever": [
+    "res://audio/sfx/shot_lever_0.wav",
+    "res://audio/sfx/shot_lever_1.wav",
+    "res://audio/sfx/shot_lever_2.wav",
+    "res://audio/sfx/shot_lever_3.wav"
+  ],
+  "shot_coach": [
+    "res://audio/sfx/shot_coach_0.wav",
+    "res://audio/sfx/shot_coach_1.wav",
+    "res://audio/sfx/shot_coach_2.wav",
+    "res://audio/sfx/shot_coach_3.wav"
+  ],
+  "shot_sharps": [
+    "res://audio/sfx/shot_sharps_0.wav",
+    "res://audio/sfx/shot_sharps_1.wav",
+    "res://audio/sfx/shot_sharps_2.wav",
+    "res://audio/sfx/shot_sharps_3.wav"
+  ],
+  "hammer": [
+    "res://audio/sfx/hammer_0.wav",
+    "res://audio/sfx/hammer_1.wav",
+    "res://audio/sfx/hammer_2.wav",
+    "res://audio/sfx/hammer_3.wav"
+  ],
+  "dry": [
+    "res://audio/sfx/dry_0.wav",
+    "res://audio/sfx/dry_1.wav",
+    "res://audio/sfx/dry_2.wav"
+  ],
+  "cylinder": [
+    "res://audio/sfx/cylinder_0.wav",
+    "res://audio/sfx/cylinder_1.wav",
+    "res://audio/sfx/cylinder_2.wav",
+    "res://audio/sfx/cylinder_3.wav"
+  ],
+  "lever": [
+    "res://audio/sfx/lever_0.wav",
+    "res://audio/sfx/lever_1.wav",
+    "res://audio/sfx/lever_2.wav",
+    "res://audio/sfx/lever_3.wav"
+  ],
+  "insert": [
+    "res://audio/sfx/insert_0.wav",
+    "res://audio/sfx/insert_1.wav",
+    "res://audio/sfx/insert_2.wav",
+    "res://audio/sfx/insert_3.wav"
+  ],
+  "open": [
+    "res://audio/sfx/open_0.wav",
+    "res://audio/sfx/open_1.wav",
+    "res://audio/sfx/open_2.wav"
+  ],
+  "close": [
+    "res://audio/sfx/close_0.wav",
+    "res://audio/sfx/close_1.wav",
+    "res://audio/sfx/close_2.wav"
+  ],
+  "casing": [
+    "res://audio/sfx/casing_0.wav",
+    "res://audio/sfx/casing_1.wav",
+    "res://audio/sfx/casing_2.wav",
+    "res://audio/sfx/casing_3.wav"
+  ],
+  "glass": [
+    "res://audio/sfx/glass_0.wav",
+    "res://audio/sfx/glass_1.wav",
+    "res://audio/sfx/glass_2.wav",
+    "res://audio/sfx/glass_3.wav",
+    "res://audio/sfx/glass_4.wav"
+  ],
+  "clay": [
+    "res://audio/sfx/clay_0.wav",
+    "res://audio/sfx/clay_1.wav",
+    "res://audio/sfx/clay_2.wav",
+    "res://audio/sfx/clay_3.wav"
+  ],
+  "tin": [
+    "res://audio/sfx/tin_0.wav",
+    "res://audio/sfx/tin_1.wav",
+    "res://audio/sfx/tin_2.wav",
+    "res://audio/sfx/tin_3.wav",
+    "res://audio/sfx/tin_4.wav"
+  ],
+  "steel": [
+    "res://audio/sfx/steel_0.wav",
+    "res://audio/sfx/steel_1.wav",
+    "res://audio/sfx/steel_2.wav",
+    "res://audio/sfx/steel_3.wav",
+    "res://audio/sfx/steel_4.wav"
+  ],
+  "ricochet": [
+    "res://audio/sfx/ricochet_0.wav",
+    "res://audio/sfx/ricochet_1.wav",
+    "res://audio/sfx/ricochet_2.wav",
+    "res://audio/sfx/ricochet_3.wav",
+    "res://audio/sfx/ricochet_4.wav"
+  ],
+  "dirt": [
+    "res://audio/sfx/dirt_0.wav",
+    "res://audio/sfx/dirt_1.wav",
+    "res://audio/sfx/dirt_2.wav",
+    "res://audio/sfx/dirt_3.wav"
+  ],
+  "wood": [
+    "res://audio/sfx/wood_0.wav",
+    "res://audio/sfx/wood_1.wav",
+    "res://audio/sfx/wood_2.wav",
+    "res://audio/sfx/wood_3.wav"
+  ],
+  "bell": [
+    "res://audio/sfx/bell_0.wav",
+    "res://audio/sfx/bell_1.wav"
+  ],
+  "wind": [
+    "res://audio/sfx/wind_0.wav"
+  ],
+  "step_dirt": [
+    "res://audio/sfx/step_dirt_0.wav",
+    "res://audio/sfx/step_dirt_1.wav",
+    "res://audio/sfx/step_dirt_2.wav",
+    "res://audio/sfx/step_dirt_3.wav",
+    "res://audio/sfx/step_dirt_4.wav",
+    "res://audio/sfx/step_dirt_5.wav"
+  ],
+  "step_wood": [
+    "res://audio/sfx/step_wood_0.wav",
+    "res://audio/sfx/step_wood_1.wav",
+    "res://audio/sfx/step_wood_2.wav",
+    "res://audio/sfx/step_wood_3.wav",
+    "res://audio/sfx/step_wood_4.wav",
+    "res://audio/sfx/step_wood_5.wav"
+  ],
+  "spurs": [
+    "res://audio/sfx/spurs_0.wav",
+    "res://audio/sfx/spurs_1.wav",
+    "res://audio/sfx/spurs_2.wav",
+    "res://audio/sfx/spurs_3.wav"
+  ],
+  "whip": [
+    "res://audio/sfx/whip_0.wav",
+    "res://audio/sfx/whip_1.wav"
+  ],
+  "ui": [
+    "res://audio/sfx/ui_0.wav",
+    "res://audio/sfx/ui_1.wav",
+    "res://audio/sfx/ui_2.wav"
+  ],
+  "hover": [
+    "res://audio/sfx/hover_0.wav",
+    "res://audio/sfx/hover_1.wav",
+    "res://audio/sfx/hover_2.wav"
+  ],
+  "stamp": [
+    "res://audio/sfx/stamp_0.wav",
+    "res://audio/sfx/stamp_1.wav",
+    "res://audio/sfx/stamp_2.wav"
+  ],
+  "star": [
+    "res://audio/sfx/star_0.wav"
+  ],
+  "dead_eye_in": [
+    "res://audio/sfx/dead_eye_in_0.wav"
+  ],
+  "dead_eye_out": [
+    "res://audio/sfx/dead_eye_out_0.wav"
+  ],
+  "heartbeat": [
+    "res://audio/sfx/heartbeat_0.wav"
+  ]
+}

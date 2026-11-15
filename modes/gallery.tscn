@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://modes/gallery.gd" id="1"]
+
+[node name="Gallery" type="Node3D"]
+script = ExtResource("1")
+challenge_id = &"gallery"
+display_name = "Gallery"
+time_limit = 90.0
+star_thresholds = Array[float]([4000.0, 9000.0, 15000.0])

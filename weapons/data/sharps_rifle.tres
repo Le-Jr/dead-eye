@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_data.gd" id="1"]
+
+[sub_resource type="Curve" id="recoil"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.1, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[resource]
+script = ExtResource("1")
+display_name = "Long Rifle"
+damage = 120.0
+max_range = 900.0
+muzzle_velocity = 410.0
+zero_distances = PackedFloat32Array(100, 200, 300, 400, 500)
+fire_interval = 0.3
+cock_time = 0.35
+capacity = 1
+reload_type = 3
+reload_open_time = 0.5
+reload_eject_time = 0.35
+reload_insert_time = 0.65
+reload_close_time = 0.4
+spread_deg = 0.5
+ads_spread_deg = 0.02
+move_spread_deg = 3.0
+recoil_kick = Vector2(6.5, 1.0)
+recoil_duration = 0.9
+recoil_curve = SubResource("recoil")
+viewmodel_kick = 1.4
+ads_fov = 32.0
+ads_time = 0.38
+hip_position = Vector3(0.1, -0.12, -0.28)
+ads_position = Vector3(0, -0.03, -0.13)
+smoke_amount = 1.9
+casing_size = Vector2(0.0065, 0.053)
+sound_fire = &"shot_sharps"
+sound_dry = &"dry"
+sound_cock = &"hammer"
+sound_reload_open = &"open"
+sound_reload_insert = &"insert"
+sound_reload_eject = &"cylinder"
+sound_reload_close = &"close"

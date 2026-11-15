@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_data.gd" id="1"]
+
+[sub_resource type="Curve" id="recoil"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.08, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[resource]
+script = ExtResource("1")
+display_name = "Coach Gun"
+damage = 14.0
+pellets = 9
+max_range = 60.0
+fire_interval = 0.25
+cock_time = 0.45
+capacity = 2
+reload_type = 2
+reload_open_time = 0.5
+reload_insert_time = 0.55
+reload_close_time = 0.4
+spread_deg = 2.2
+ads_spread_deg = 1.9
+move_spread_deg = 1.0
+recoil_kick = Vector2(8.5, 2.0)
+recoil_duration = 0.7
+recoil_curve = SubResource("recoil")
+viewmodel_kick = 1.6
+ads_fov = 62.0
+ads_time = 0.22
+hip_position = Vector3(0.11, -0.13, -0.3)
+ads_position = Vector3(0, -0.021, -0.27)
+smoke_amount = 2.2
+casing_size = Vector2(0.0105, 0.065)
+sound_fire = &"shot_coach"
+sound_dry = &"dry"
+sound_cock = &"hammer"
+sound_reload_open = &"open"
+sound_reload_insert = &"insert"
+sound_reload_eject = &"cylinder"
+sound_reload_close = &"close"

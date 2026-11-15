@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://hqwwk3gqgpma"]
+
+[ext_resource type="Script" uid="uid://ce8a83fk7taf8" path="res://weapons/weapon_data.gd" id="1"]
+
+[sub_resource type="Curve" id="recoil"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.1, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[resource]
+script = ExtResource("1")
+display_name = "Single Action Revolver"
+max_range = 300.0
+zero_distances = null
+recoil_curve = SubResource("recoil")
+sound_fire = &"shot_revolver"
+sound_dry = &"dry"
+sound_cock = &"hammer"
+sound_reload_open = &"open"
+sound_reload_insert = &"insert"
+sound_reload_eject = &"cylinder"
+sound_reload_close = &"close"
